@@ -1,12 +1,21 @@
 import os
+import asyncio
+import nest_asyncio
 from aiohttp import web
 from pyrogram import Client, filters
+
+# Event loop fix for Python 3.10+
+nest_asyncio.apply()
 
 API_ID = 29608422
 API_HASH = "3db2f8e109301f02f5d9c8f10dd79244"
 BOT_TOKEN = "8227731967:AAEmgSiywxmGfe1GYhj9RSqaOtMvaAgS99k"
 BIN_CHANNEL = -1004450462812
 DOMAIN_URL = "https://sr-file-bot-1868.onrender.com"
+
+# Set explicit event loop
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
 bot = Client(
     "video_bot",
@@ -103,29 +112,20 @@ async def handle_media(client, message):
     except Exception as e:
         await status_msg.edit_text(f"Error:\n`{str(e)}`")
 
-async def init_app():
+async def main():
+    port = int(os.environ.get("PORT", 5000))
     app = web.Application()
     app.router.add_get('/watch/{msg_id}', watch_handler)
     app.router.add_get('/download/{msg_id}', download_handler)
-    return app
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+
+    await bot.start()
+    print(">>> BOT AND WEB SERVER STARTED <<<")
+    await asyncio.Event().wait()
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    
-    # ব্যাকগ্রাউন্ডে ওয়েব সার্ভার সেটআপ
-    bot.start()
-    app = bot.loop.run_until_complete(init_app())
-    runner = web.AppRunner(app)
-    bot.loop.run_until_complete(runner.setup())
-    site = web.TCPSite(runner, '0.0.0.0', port)
-    bot.loop.run_until_complete(site.start())
-    
-    print(">>> BOT AND WEB SERVER STARTED <<<")
-    
-    # বটকে সচল রাখা
-    try:
-        bot.loop.run_forever()
-    except (KeyboardInterrupt, SystemExit):
-        pass
-    finally:
-        bot.stop()
+    loop.run_until_complete(main())

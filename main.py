@@ -1,6 +1,5 @@
 import os
 import asyncio
-import math
 from aiohttp import web
 from pyrogram import Client, filters
 
@@ -10,7 +9,6 @@ BOT_TOKEN = "8227731967:AAEmgSiywxmGfe1GYhj9RSqaOtMvaAgS99k"
 BIN_CHANNEL = -1004450462812
 DOMAIN_URL = "https://sr-file-bot-1868.onrender.com"
 
-# মেমোরি সেশন দিয়ে ক্লায়েন্ট রান
 bot = Client(
     "video_bot",
     api_id=API_ID,
@@ -69,7 +67,6 @@ async def download_handler(request):
         )
         await response.prepare(request)
 
-        # ১ মেগাবাইট করে ডাটা স্ট্রিম করা
         async for chunk in bot.stream_media(msg, limit=0):
             await response.write(chunk)
 
@@ -107,22 +104,22 @@ async def handle_media(client, message):
     except Exception as e:
         await status_msg.edit_text(f"Error:\n`{str(e)}`")
 
-async def main():
+async def start_web_server():
     port = int(os.environ.get("PORT", 5000))
     app = web.Application()
-
     app.router.add_get('/watch/{msg_id}', watch_handler)
     app.router.add_get('/download/{msg_id}', download_handler)
-
+    
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
 
-    await bot.start()
-    print(">>> BOT AND WEB SERVER STARTED <<<")
-    await asyncio.Event().wait()
+# Pyrogram-এর নিজস্ব স্টার্টআপ হুক
+@bot.on_start()
+async def on_bot_start(client):
+    await start_web_server()
+    print(">>> BOT AND WEB SERVER STARTED SUCCESSFULLY <<<")
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    bot.run()

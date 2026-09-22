@@ -104,7 +104,7 @@ async def handle_media(client, message):
     except Exception as e:
         await status_msg.edit_text(f"Error:\n`{str(e)}`")
 
-async def start_web_server():
+async def start_services():
     port = int(os.environ.get("PORT", 5000))
     app = web.Application()
     app.router.add_get('/watch/{msg_id}', watch_handler)
@@ -114,12 +114,10 @@ async def start_web_server():
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
-
-# Pyrogram-এর নিজস্ব স্টার্টআপ হুক
-@bot.on_start()
-async def on_bot_start(client):
-    await start_web_server()
-    print(">>> BOT AND WEB SERVER STARTED SUCCESSFULLY <<<")
+    
+    await bot.start()
+    print(">>> BOT AND SERVER STARTED <<<")
+    await asyncio.Event().wait()
 
 if __name__ == '__main__':
-    bot.run()
+    asyncio.run(start_services())

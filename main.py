@@ -3,7 +3,6 @@ from flask import Flask, render_template_string
 import telebot
 
 BOT_TOKEN = "8227731967:AAEmgSiywxmGfe1GYhj9RSqaOtMvaAgS99k"
-# আপনার Render URL বসানো হয়েছে
 DOMAIN_URL = "https://sr-file-bot.onrender.com"  
 
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -11,11 +10,18 @@ app = Flask(__name__)
 
 video_db = {}
 
-@bot.message_handler(content_types=['video'])
+# ভিডিও ফাইল অথবা ফরওয়ার্ড করা ভিডিও হ্যান্ডেল করবে
+@bot.message_handler(content_types=['video', 'document'])
 def handle_video(message):
-    file_id = message.video.file_id
-    file_size = message.video.file_size
-    video_key = message.video.file_unique_id
+    video = message.video or message.document
+    
+    if not video:
+        bot.reply_to(message, "❌ এটি কোনো ভিডিও ফাইল নয়।")
+        return
+
+    file_id = video.file_id
+    file_size = getattr(video, 'file_size', 0)
+    video_key = getattr(video, 'file_unique_id', file_id)
     
     video_db[video_key] = {
         'file_id': file_id,
@@ -56,7 +62,6 @@ def watch_video(video_key):
     return "ভিডিও পাওয়া যায়নি!", 404
 
 def start_bot():
-    # পুরোনো Webhook মুছে ফেলে নতুন করে Polling শুরু করবে
     bot.remove_webhook()
     bot.infinity_polling(skip_pending=True)
 

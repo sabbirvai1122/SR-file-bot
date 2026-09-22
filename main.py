@@ -3,14 +3,12 @@ import asyncio
 from aiohttp import web
 from pyrogram import Client, filters
 
-# আপনার তথ্য
 API_ID = 29608422
 API_HASH = "3db2f8e109301f02f5d9c8f10dd79244"
 BOT_TOKEN = "8227731967:AAEmgSiywxmGfe1GYhj9RSqaOtMvaAgS99k"
 BIN_CHANNEL = -1004450462812
-DOMAIN_URL = "https://sr-file-bot.onrender.com"
+DOMAIN_URL = "https://your-new-app-name.onrender.com"  # Render থেকে নাম পাওয়ার পর এটি আপডেট করবেন
 
-# Pyrogram Client
 bot = Client(
     "video_bot",
     api_id=API_ID,
@@ -18,7 +16,6 @@ bot = Client(
     bot_token=BOT_TOKEN
 )
 
-# ওয়েবসাইট HTML
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="bn">
@@ -34,6 +31,46 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <div class="container">
+        <h2>🎥 আপনার ভিডিও প্রস্তুত</h2>
+        <p>ভিডিওটি স্ট্রিম বা ডাউনলোড করুন:</p>
+        <a href="#" class="btn">▶ High Speed Stream / Download</a>
+    </div>
+</body>
+</html>
+"""
+
+async def watch_handler(request):
+    return web.Response(text=HTML_TEMPLATE, content_type='text/html')
+
+@bot.on_message(filters.command("start") & filters.private)
+async def start_cmd(client, message):
+    await message.reply_text("👋 স্বাগতম! যেকোনো বড় ভিডিও ফাইল পাঠালে আমি লিঙ্ক তৈরি করে দেব।")
+
+@bot.on_message((filters.video | filters.document) & filters.private)
+async def handle_media(client, message):
+    try:
+        forwarded_msg = await message.copy(chat_id=BIN_CHANNEL)
+        msg_id = forwarded_msg.id
+        web_link = f"{DOMAIN_URL}/watch/{msg_id}"
+        await message.reply_text(f"✅ **বড় ফাইলের লিঙ্ক তৈরি হয়েছে!**\n\n🔗 {web_link}", quote=True)
+    except Exception as e:
+        await message.reply_text(f"❌ কোনো সমস্যা হয়েছে: {str(e)}")
+
+async def main():
+    app = web.Application()
+    app.router.add_get('/watch/{msg_id}', watch_handler)
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', 5000)
+    await site.start()
+    
+    await bot.start()
+    print("Bot Started!")
+    await asyncio.Event().wait()
+
+if __name__ == '__main__':
+    asyncio.run(main())
         <h2>🎥 আপনার ভিডিও প্রস্তুত</h2>
         <p>ভিডিওটি স্ট্রিম বা ডাউনলোড করুন:</p>
         <a href="#" class="btn">▶ High Speed Stream / Download</a>

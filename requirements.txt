@@ -1,3 +1,4 @@
 pyrogram
 aiohttp
 tgcrypto
+nest_asyncio

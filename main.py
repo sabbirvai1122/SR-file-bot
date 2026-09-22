@@ -2,11 +2,9 @@ import os
 from flask import Flask, render_template_string
 import telebot
 
-# আপনার টেলিগ্রাম বট টোকেন
 BOT_TOKEN = "8227731967:AAEmgSiywxmGfe1GYhj9RSqaOtMvaAgS99k"
-
-# Render থেকে লিঙ্ক পাওয়ার পর নিচের ডোমেইনটি পরিবর্তন করে দেবেন
-DOMAIN_URL = "https://your-app-name.onrender.com" 
+# আপনার Render URL বসানো হয়েছে
+DOMAIN_URL = "https://sr-file-bot.onrender.com"  
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
@@ -57,7 +55,12 @@ def watch_video(video_key):
         return render_template_string(HTML_TEMPLATE)
     return "ভিডিও পাওয়া যায়নি!", 404
 
+def start_bot():
+    # পুরোনো Webhook মুছে ফেলে নতুন করে Polling শুরু করবে
+    bot.remove_webhook()
+    bot.infinity_polling(skip_pending=True)
+
 if __name__ == '__main__':
     import threading
-    threading.Thread(target=lambda: bot.infinity_polling(skip_pending=True)).start()
+    threading.Thread(target=start_bot).start()
     app.run(host='0.0.0.0', port=5000)

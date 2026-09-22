@@ -3,11 +3,12 @@ import asyncio
 from aiohttp import web
 from pyrogram import Client, filters
 
-# আপনার দেওয়া তথ্য ও নতুন ডোমেইন
 API_ID = 29608422
 API_HASH = "3db2f8e109301f02f5d9c8f10dd79244"
 BOT_TOKEN = "8227731967:AAEmgSiywxmGfe1GYhj9RSqaOtMvaAgS99k"
-BIN_CHANNEL = -1004450462812
+
+# চ্যানেল আইডি নিশ্চিত করতে int ভ্যালু হিসেবে রাখা হয়েছে
+BIN_CHANNEL = int("-1004450462812")
 DOMAIN_URL = "https://sr-file-bot-1868.onrender.com"
 
 bot = Client(
@@ -26,9 +27,8 @@ HTML_TEMPLATE = """
     <title>Video Streamer</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121212; color: white; text-align: center; padding: 20px; }
-        .container { max-width: 700px; margin: auto; background: #1e1e1e; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .container { max-width: 700px; margin: auto; background: #1e1e1e; padding: 25px; border-radius: 12px; }
         .btn { display: inline-block; padding: 12px 24px; margin: 10px; color: white; background-color: #0088cc; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .btn:hover { background-color: #006699; }
     </style>
 </head>
 <body>
@@ -46,17 +46,18 @@ async def watch_handler(request):
 
 @bot.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
-    await message.reply_text("👋 স্বাগতম! যেকোনো ২-৩ GB পর্যন্ত ভিডিও ফাইল পাঠালে আমি প্লে/ডাউনলোড লিঙ্ক তৈরি করে দেব।")
+    await message.reply_text("👋 স্বাগতম! ভিডিও বা ফাইল পাঠালে আমি লিংক তৈরি করে দেব।")
 
 @bot.on_message((filters.video | filters.document) & filters.private)
 async def handle_media(client, message):
+    status_msg = await message.reply_text("🔄 প্রসেসিং হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...", quote=True)
     try:
         forwarded_msg = await message.copy(chat_id=BIN_CHANNEL)
         msg_id = forwarded_msg.id
         web_link = f"{DOMAIN_URL}/watch/{msg_id}"
-        await message.reply_text(f"✅ **বড় ফাইলের লিঙ্ক তৈরি হয়েছে!**\n\n🔗 {web_link}", quote=True)
+        await status_msg.edit_text(f"✅ **বড় ফাইলের লিঙ্ক তৈরি হয়েছে!**\n\n🔗 {web_link}")
     except Exception as e:
-        await message.reply_text(f"❌ কোনো সমস্যা হয়েছে: {str(e)}")
+        await status_msg.edit_text(f"❌ এরর এসেছে:\n`{str(e)}`\n\n(নোট: বটটি প্রসেসিং চ্যানেলে Admin বানানো আছে কিনা তা নিশ্চিত করুন।)")
 
 async def main():
     app = web.Application()
@@ -68,7 +69,7 @@ async def main():
     await site.start()
     
     await bot.start()
-    print("Bot Started!")
+    print("Bot Started Successfully!")
     await asyncio.Event().wait()
 
 if __name__ == '__main__':

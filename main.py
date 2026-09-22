@@ -8,7 +8,7 @@ API_HASH = "3db2f8e109301f02f5d9c8f10dd79244"
 BOT_TOKEN = "8227731967:AAEmgSiywxmGfe1GYhj9RSqaOtMvaAgS99k"
 BIN_CHANNEL = -1004450462812
 DOMAIN_URL = "https://sr-file-bot-1868.onrender.com"
-"  # Render থেকে নাম পাওয়ার পর এটি আপডেট করবেন
+  # Render থেকে নাম পাওয়ার পর এটি আপডেট করবেন
 
 bot = Client(
     "video_bot",
